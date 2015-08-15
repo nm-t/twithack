@@ -82,75 +82,108 @@
 		</nav>
 
 		<!-- Main body -->
-		<div class="container">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Question</th>
-                <th>Username</th>
-                <th>Tags</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td><p>Why is the sky blue?
-                  <?php
-                	echo "pisse";
-                	?>
-                	</p>
-					<form>
-					<input type="text" name="answer_1" size="50" margin-bottom="5">
-					<br>
-                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
-                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
-                </td>
-                <td>@ThomasEngine
-                  <!-- TODO: Add "official" tick thing -->
-                </td>
-                <td>
-                  <h4>
-                  <span class="label label-default">#sky</span>
-                  <span class="label label-default">#blue</span>
-                  </h4>
-                </td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td><p>What's on in the city today?</p>
-          <form>
-          <input type="text" name="answer_1" size="50" margin-bottom="5"><br>
-                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
-                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
-                </td>
-                <td>@smallcat</td>
-                <td>
-                  <h4>
-                  <span class="label label-default">#city</span>
-                  <span class="label label-default">#melbourne</span>
-                  </h4></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td><p>Who was the band that was just on on stage 3? #soundwave</p>
-          <form>
-          <input type="text" name="answer_1" size="50" margin-bottom="5"><br>
-                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
-                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
-                </td>
-                </td>
-                <td>@happybee</td>
-                <td>
-                  <h4>
-                  <span class="label label-default">#soundwave</span>
-                  <span class="label label-default">#music</span>
-                  </h4>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+
+
+<?php
+// Hashtable to store English dictionary
+//$myFile = fopen("words.txt", "r") or die("Unable to open file!");
+//while(!feof($myFile)){
+//  print(fgets($myFile));
+//}
+//fclose($myFile);
+?>
+
+
+<?php
+require "twitteroauth/autoload.php";
+
+use Abraham\TwitterOAuth\TwitterOAuth;
+
+$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
+$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
+$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
+$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
+
+$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
+
+$content = $connection->get("account/verify_credentials");
+//$statues = $connection->get("statuses/home_timeline", array("count" => 25, "exclude_replies" => true));
+//$statues = $connection->post("statuses/update", array("status" => "hello world"));
+
+//print_r($statuses->statuses[0]->text);
+
+// Get http request data to determine if we're viewing questions or replies
+
+
+
+if (isset($_GET['qid'])) {  
+  $questionid = $_GET['qid'];
+  $screename = $_GET['sname'];
+  
+  print("<p>Viewing replies to question " . $questionid . "</p>");
+  
+  // Get the original question
+  $question = $connection->get("statuses/show", array("id" => $questionid));
+  
+  print("<b>" . $question->user->screen_name . "</b>:");
+  print("<p><i>" . $question->text . "</i></p><hr />"); 
+  
+  // Get and display replies to a particular question
+  $replycount = 0;
+  $replies = $connection->get("search/tweets", array("q" => "@" . $screename, "count"=>3));
+  foreach($replies->statuses as $reply) { 
+    if($reply->in_reply_to_status_id == $questionid) {
+      $replycount++;
+      print("<p>" . $reply->user->screen_name . ": " . $reply->text . "</p><hr >");
+    }
+  }
+  
+  // Display message if there are no replies
+  if($replycount == 0) {
+    print("<p>No replies yet. Write one!</p>");
+  }
+  
+} else {
+  // Get query if there is one?
+  if(isset($_GET['q'])) {
+    $query = $_GET['q'];
+  } else {
+    $query = '?'; // Placeholder query
+  }
+
+  print("<div class=\"container\"><table class=\"table table-striped\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
+
+  // Get top questions matching query
+  $questions = $connection->get("search/tweets", array("q" => $query, "count"=>3));
+  $count = 1;
+  foreach($questions->statuses as $tweet) {
+    print("<tr><td>" . $count . "</td><td><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
+    $count++;
+
+    // Check if the tweet is English (enough)!
+
+    // Delimit tweets by space character.
+    $words = explode(" ", $tweet->text);
+    $totalWords = sizeof($words);
+    //for($j = 0; $j < $totalWords; $j++){
+      // Remove all special characters
+      //$stripped = preg_replace('/[^a-z]/i', '', $words[$j]);
+      //print($stripped . "<br />");
+      // If the length of the word is >1
+      // And the 
+    //}
+    
+    print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
+    print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
+    print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
+    print("<td>" . $tweet->user->screen_name . "</td>");
+    print("<td><h4><span class=\"label label-default\">#sky</span></h4></td>");
+  }
+  print("</tr></tbody></table>");
+}
+
+?>
+
 	</body>
 
 </html>
