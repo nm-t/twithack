@@ -44,10 +44,10 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $_SESSION['access_token'] = $access_token['oauth_token'];
     $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
     print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href='twitter.php'>Click here to continue.</a>");
-    header("Location: http://localhost/twitter.php");
+    header("Location: http://localhost/");
     exit;
   } else {
-    $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => "http://localhost/twitter.php"));
+    $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => "http://localhost/"));
 
     $url = $connection->url("oauth/authenticate", array("oauth_token" => $access_token['oauth_token']));
     print("<div class=\"container\">");
@@ -209,7 +209,7 @@ if (isset($_GET['qid'])) {
 
           //<a href="?q=%23life" class="label label-default">#life</a>
         //print("<a href=\"?q=%23" . $words[$j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
-        print("<a href=\"?q=%23" . $words[j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
+        print("<a href=\"?q=%23" . substr($words[$j], 1) . "\" class=\"label label-default\">" . $words[$j] . "</a>");
         //print($words[$j] . " ");
       }
     }
