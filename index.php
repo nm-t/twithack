@@ -128,6 +128,8 @@ if(!isset($_GET['qid']) && $logged_in) {
     </div>
 <?php
 }
+
+if(!isset($_GET['qid'])) {
 ?>
 	
 		<!-- Buttons for categories -->
@@ -146,7 +148,7 @@ if(!isset($_GET['qid']) && $logged_in) {
 			</div>
 		</nav>
 		
-		
+<?php } ?>		
 
 		<!-- Main body -->
 
