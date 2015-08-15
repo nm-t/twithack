@@ -88,7 +88,7 @@ if (isset($_GET['qid'])) {
 	}
 	
 } else {
-	// Handle posted response if there is one
+	// Handle posted question if there is one
 	if(isset($_GET['submit'])) {
 		$statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
 		print("<p>Your question was successfully submitted!</p>");

@@ -1,3 +1,19 @@
+<?php
+require "twitteroauth/autoload.php";
+
+use Abraham\TwitterOAuth\TwitterOAuth;
+
+$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
+$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
+$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
+$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
+
+$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
+$content = $connection->get("account/verify_credentials");
+
+// Base URL of the site
+$base_url = "http://localhost/";
+?>
 
 <!DOCTYPE html>
 <html>
@@ -13,7 +29,6 @@
 	</head>
 	
 	<body>
-
 		<!-- Navigation bar -->
 		<nav class="navbar navbar-default">
         <div class="container">
@@ -24,11 +39,11 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">TwitHack</a>
+            <a class="navbar-brand" href="<?php echo $base_url ?>">TwitHack</a>
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <li class="active"><a href="#">Home</a></li>
+              <li class="active"><a href="<?php echo $base_url ?>">Home</a></li>
               <li><a href="#about">About</a></li>
               <li><a href="#contact">Contact</a></li>
               <li class="dropdown">
@@ -58,18 +73,34 @@
     <!-- Post a question -->
     <div class="container">
       <p><h2>Got a question?</h2></p>
+	  
+<?php
+// Handle a user posting a question.
+if(isset($_GET['submit'])) {
+	// Post the tweet and redirect indicating success.
+	$statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
+	header("Location: " . $base_url . "?success");
+	exit;
+} 
+
+// Display success message if a question/answer is posted.
+if(isset($_GET['success'])) {
+	echo "<p>Your submission was successful!</p>";
+}
+?>
       
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
-      <input type="text" name="answer_1" style="width:80%">
-      <button type="button" class="btn btn-sm btn-info">Post!</button>
+      <input type="text" name="tweet" style="width:80%">
+      <input type="submit" name="submit" class="btn btn-sm btn-info" value="Post!"></input>
+	  </form>
       <p>Suggested hashtags:<br>
         <!-- TODO: Insert dynamic hashtag adding -->
         <h4>
-          <span class="label label-default">#cat</span>
-          <span class="label label-default">#animals</span>
-          <span class="label label-default">#life</span>
-          <span class="label label-default">#philosophy</span>
+          <a href="?q=%23cat" class="label label-default">#cat</a>
+          <a href="?q=%23animals" class="label label-default">#animals</a>
+          <a href="?q=%23life" class="label label-default">#life</a>
+          <a href="?q=%23philosophy"  class="label label-default">#philosophy</a>
         </h4>
       </p>
     </div>
@@ -83,8 +114,17 @@
 					<button type="button" class="btn btn-success">Random</button>
 					<button type="button" class="btn btn-info">Default</button>
 			</h1>
+				
+			<!-- Search functionality -->
+			<form>
+			<p><h4>Search</h4></p>
+			<input type="text" name="tweet" style="width:30%">
+			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
+			</form>
 			</div>
 		</nav>
+		
+		
 
 		<!-- Main body -->
 
@@ -98,29 +138,8 @@
 //fclose($myFile);
 ?>
 
-
 <?php
-require "twitteroauth/autoload.php";
-
-use Abraham\TwitterOAuth\TwitterOAuth;
-
-$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
-$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
-$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
-$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
-
-$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
-
-$content = $connection->get("account/verify_credentials");
-//$statues = $connection->get("statuses/home_timeline", array("count" => 25, "exclude_replies" => true));
-//$statues = $connection->post("statuses/update", array("status" => "hello world"));
-
-//print_r($statuses->statuses[0]->text);
-
 // Get http request data to determine if we're viewing questions or replies
-
-
-
 if (isset($_GET['qid'])) {  
   $questionid = $_GET['qid'];
   $screename = $_GET['sname'];
