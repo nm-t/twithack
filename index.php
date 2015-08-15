@@ -35,6 +35,8 @@ $base_url = "http://localhost/";
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		
+		<meta charset="UTF-8">
 	</head>
 	
 	<body>
@@ -52,11 +54,11 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_GET['oauth_verifier'], "oauth_token" => $_GET['oauth_token']));
     $_SESSION['access_token'] = $access_token['oauth_token'];
     $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
-    print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href='twitter.php'>Click here to continue.</a>");
+    print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a>");
     header("Location: http://localhost/");
     exit;
   } else {
-    $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => "http://localhost/"));
+    $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => $base_url));
 
     $url = $connection->url("oauth/authenticate", array("oauth_token" => $access_token['oauth_token']));
     print("<p align=right>You are not logged in. <a href=\"" . $url . "\">Log in with Twitter!</a></p>");
@@ -65,6 +67,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
   $userscreenname = $content->screen_name;
   //print_r($content); // DEBUG
   print("<p>You are logged in as @" . $userscreenname . "</p>");
+  $logged_in = true;
 }
 ?>
       </ul>
@@ -76,11 +79,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
         <h1>AskTwitter</h1>
 			</p>
 		</div>
-
-    <!-- Post a question -->
-    <div class="container">
-      <p><h2>Got a question?</h2></p>
-	  
+  
 <?php
 // Handle a user posting a question.
 if(isset($_GET['submitquestion'])) {
@@ -96,6 +95,13 @@ if(isset($_GET['success'])) {
 }
 ?>
       
+<?php
+if(!isset($_GET['qid']) && $logged_in) {
+?>
+	<!-- Post a question -->
+	<div class="container">
+    <p><h2>Got a question?</h2></p>
+	  
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
       <input type="text" name="tweet" style="width:80%">
@@ -111,7 +117,10 @@ if(isset($_GET['success'])) {
         </h4>
       </p>
     </div>
-		
+<?php
+}
+?>
+	
 		<!-- Buttons for categories -->
 		<nav class="navbar">
 			<div class="container">
@@ -121,8 +130,7 @@ if(isset($_GET['success'])) {
 					<button type="button" class="btn btn-success">Random</button>
 					<button type="button" class="btn btn-info">Default</button>
 			</h1>
-				
-			<!-- Search functionality -->
+		<!-- Search functionality -->
 			<form>
 			<input type="text" name="q" style="width:30%">
 			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
@@ -187,7 +195,7 @@ if (isset($_GET['qid'])) {
   print("<div class=\"container\"><table class=\"table table-striped\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
 
   // Get top questions matching query
-  $questions = $connection->get("search/tweets", array("q" => $query, "count"=>3));
+  $questions = $connection->get("search/tweets", array("q" => $query, "count"=>15));
   $count = 1;
   foreach($questions->statuses as $tweet) {
     print("<tr><td>" . $count . "</td><td><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
