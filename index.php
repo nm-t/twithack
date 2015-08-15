@@ -1,3 +1,20 @@
+<?php
+require "twitteroauth/autoload.php";
+
+use Abraham\TwitterOAuth\TwitterOAuth;
+
+$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
+$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
+$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
+$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
+
+$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
+$content = $connection->get("account/verify_credentials");
+
+// Base URL of the site
+$base_url = "http://localhost/";
+?>
+
 <!DOCTYPE html>
 <html>
 	<head>
@@ -12,7 +29,6 @@
 	</head>
 	
 	<body>
-
 		<!-- Navigation bar -->
       <ul class="nav nav-tabs" role="tablist" style="margin: 10px 10px">
         <li role="presentation" class="active"><a href="#">Home</a></li>
@@ -21,29 +37,6 @@
 
 
 <?php
-require "twitteroauth/autoload.php";
-
-use Abraham\TwitterOAuth\TwitterOAuth;
-
-session_start();
-
-// App-specific access tokens
-$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
-$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
-
-// Use user access tokens to authentication for posting questions or replying
-if(isset($_SESSION['access_token']) && isset($_SESSION['access_token_secret'])) {
-  $access_token = $_SESSION['access_token'];
-  $access_token_secret = $_SESSION['access_token_secret'];
-} else {
-  $access_token = '';
-  $access_token_secret = '';
-}
-
-// Instantiate authentication framework for twitter API
-$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
-$content = $connection->get("account/verify_credentials");
-
 // User login
 if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])) {
   if(isset($_GET['oauth_verifier'])) {
@@ -69,7 +62,6 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 ?>
       </ul>
 
-
 		<!-- Header -->
 		<div class="container">
 			<p align="center">
@@ -81,18 +73,34 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     <!-- Post a question -->
     <div class="container">
       <p><h2>Got a question?</h2></p>
+	  
+<?php
+// Handle a user posting a question.
+if(isset($_GET['submit'])) {
+	// Post the tweet and redirect indicating success.
+	$statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
+	header("Location: " . $base_url . "?success");
+	exit;
+} 
+
+// Display success message if a question/answer is posted.
+if(isset($_GET['success'])) {
+	echo "<p>Your submission was successful!</p>";
+}
+?>
       
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
-      <input type="text" name="answer_1" style="width:80%">
-      <button type="button" class="btn btn-sm btn-info">Post!</button>
+      <input type="text" name="tweet" style="width:80%">
+      <input type="submit" name="submit" class="btn btn-sm btn-info" value="Post!"></input>
+	  </form>
       <p>Suggested hashtags:<br>
         <!-- TODO: Insert dynamic hashtag adding -->
         <h4>
-          <span class="label label-default">#cat</span>
-          <span class="label label-default">#animals</span>
-          <span class="label label-default">#life</span>
-          <span class="label label-default">#philosophy</span>
+          <a href="?q=%23cat" class="label label-default">#cat</a>
+          <a href="?q=%23animals" class="label label-default">#animals</a>
+          <a href="?q=%23life" class="label label-default">#life</a>
+          <a href="?q=%23philosophy"  class="label label-default">#philosophy</a>
         </h4>
       </p>
     </div>
@@ -106,8 +114,17 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 					<button type="button" class="btn btn-success">Random</button>
 					<button type="button" class="btn btn-info">Default</button>
 			</h1>
+				
+			<!-- Search functionality -->
+			<form>
+			<p><h4>Search</h4></p>
+			<input type="text" name="tweet" style="width:30%">
+			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
+			</form>
 			</div>
 		</nav>
+		
+		
 
 		<!-- Main body -->
 
@@ -120,7 +137,6 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 //}
 //fclose($myFile);
 ?>
-
 
 
 
