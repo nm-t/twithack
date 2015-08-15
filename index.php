@@ -76,7 +76,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 	  
 <?php
 // Handle a user posting a question.
-if(isset($_GET['submit'])) {
+if(isset($_GET['submitquestion'])) {
 	// Post the tweet and redirect indicating success.
 	$statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
 	header("Location: " . $base_url . "?success");
@@ -92,7 +92,7 @@ if(isset($_GET['success'])) {
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
       <input type="text" name="tweet" style="width:80%">
-      <input type="submit" name="submit" class="btn btn-sm btn-info" value="Post!"></input>
+      <input type="submit" name="submitquestion" class="btn btn-sm btn-info" value="Post!"></input>
 	  </form>
       <p>Suggested hashtags:<br>
         <!-- TODO: Insert dynamic hashtag adding -->
@@ -117,8 +117,7 @@ if(isset($_GET['success'])) {
 				
 			<!-- Search functionality -->
 			<form>
-			<p><h4>Search</h4></p>
-			<input type="text" name="tweet" style="width:30%">
+			<input type="text" name="q" style="width:30%">
 			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
 			</form>
 			</div>
@@ -219,6 +218,11 @@ if (isset($_GET['qid'])) {
 
 ?>
 
+	<div class="container">
+			<p align="center">
+				&copy; Team public catic void 2015
+			</p>
+		</div>
 	</body>
 
 </html>
