@@ -103,8 +103,8 @@
 					<form>
 					<input type="text" name="answer_1" size="50" margin-bottom="5">
 					<br>
-                	<button type="button" class="btn btn-xs btn-info">Reply</button>
-                  <button type="button" class="btn btn-xs btn-default">Clear</button>
+                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
+                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
                 </td>
                 <td>@ThomasEngine
                   <!-- TODO: Add "official" tick thing -->
@@ -119,7 +119,11 @@
               <tr>
                 <td>2</td>
                 <td><p>What's on in the city today?</p>
-                	<button type="button" class="btn btn-xs btn-info">Reply</button></td>
+          <form>
+          <input type="text" name="answer_1" size="50" margin-bottom="5"><br>
+                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
+                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
+                </td>
                 <td>@smallcat</td>
                 <td>
                   <h4>
@@ -130,7 +134,11 @@
               <tr>
                 <td>3</td>
                 <td><p>Who was the band that was just on on stage 3? #soundwave</p>
-                	<button type="button" class="btn btn-xs btn-info">Reply</button>
+          <form>
+          <input type="text" name="answer_1" size="50" margin-bottom="5"><br>
+                	<button type="button" class="btn btn-xs btn-info" style="margin: 5px 1px">Reply</button>
+                  <button type="button" class="btn btn-xs btn-default" style="margin: 5px 1px">Clear</button>
+                </td>
                 </td>
                 <td>@happybee</td>
                 <td>
