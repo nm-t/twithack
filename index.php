@@ -54,7 +54,10 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_GET['oauth_verifier'], "oauth_token" => $_GET['oauth_token']));
     $_SESSION['access_token'] = $access_token['oauth_token'];
     $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
-    print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a>");
+    
+    //print("<div class=\"alert alert-success\" role=\"alert\"><strong>Well done!</strong> You successfully read this important alert message.</div>");
+    print("<div class></div>");
+    print("<div class=\"alert alert-success\" role=\"alert\"><strong>WEOW!</strong> Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a>");
     header("Location: http://localhost/");
     exit;
   } else {
@@ -161,8 +164,9 @@ if (isset($_GET['qid'])) {
   $questionid = $_GET['qid'];
   $screename = $_GET['sname'];
   
+  print("<div class=\"container\">");
   print("<p>Viewing replies to question " . $questionid . "</p>");
-  
+
   // Get the original question
   $question = $connection->get("statuses/show", array("id" => $questionid));
   
@@ -178,11 +182,14 @@ if (isset($_GET['qid'])) {
       print("<p>" . $reply->user->screen_name . ": " . $reply->text . "</p><hr >");
     }
   }
-  
   // Display message if there are no replies
   if($replycount == 0) {
-    print("<p>No replies yet. Write one!</p>");
   }
+    print("<form><input type=\"text\" name=\"tweet\" style=\"width:80%\"><input type=\"hidden\" name=\"sname\" value=\"" . $screename . "\"><input type=\"hidden\"  name=\"qid\" value=\"" . $questionid . "\"><br />");
+    //print("<input type=\"submit\" name=\"submit\"></input></form><hr />");
+    print("<button type=\"button\" class=\"btn btn-default btn-info\" style=\"margin: 5px 1px\">Submit</button>");
+    print("</form></div>");
+  
   
 } else {
   // Get query if there is one?
