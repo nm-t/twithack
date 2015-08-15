@@ -5,8 +5,17 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 
 $consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
 $consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
-$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
-$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
+
+session_start();
+
+// Use user access tokens to authentication for posting questions or replying
+if(isset($_SESSION['access_token']) && isset($_SESSION['access_token_secret'])) {
+	$access_token = $_SESSION['access_token'];
+	$access_token_secret = $_SESSION['access_token_secret'];
+} else {
+	$access_token = '';
+	$access_token_secret = '';
+}
 
 $connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
 $content = $connection->get("account/verify_credentials");
@@ -50,9 +59,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => "http://localhost/"));
 
     $url = $connection->url("oauth/authenticate", array("oauth_token" => $access_token['oauth_token']));
-    print("<div class=\"container\">");
     print("<p align=right>You are not logged in. <a href=\"" . $url . "\">Log in with Twitter!</a></p>");
-    print("</div><br />");
   }
 } else {
   $userscreenname = $content->screen_name;
