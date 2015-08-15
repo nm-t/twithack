@@ -7,6 +7,7 @@ $consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
 $consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
 
 session_start();
+ob_start();
 
 $logged_in = false;
 
@@ -29,7 +30,7 @@ $base_url = "http://localhost/";
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>TwitHack 2015</title>
+		<title>AskTwitter</title>
 
 		<link href="bootstrap.min.css" rel="stylesheet">
 		
@@ -48,7 +49,6 @@ $base_url = "http://localhost/";
         <li role="presentation"><a href="#">Profile</a></li>
         <li role="presentation"><a href="#">Messages</a></li>
 
-
 <?php
 // User login
 if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])) {
@@ -56,10 +56,9 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_GET['oauth_verifier'], "oauth_token" => $_GET['oauth_token']));
     $_SESSION['access_token'] = $access_token['oauth_token'];
     $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
-    
-    //print("<div class=\"alert alert-success\" role=\"alert\"><strong>Well done!</strong> You successfully read this important alert message.</div>");
-    print("<div class></div>");
-    print("<div class=\"alert alert-success\" role=\"alert\"><strong>WEOW!</strong> Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a>");
+    print("<div class=\"alert alert-success\" role=\"alert\" style=\"position: fixed;\" top=\"60px\"><strong>WEOW!</strong> Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a></div>");
+
+  //<?php
     header("Location: http://localhost/");
     exit;
   } else {
@@ -72,8 +71,9 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 	// Handle log outs
 	if(isset($_GET['logout'])) {
 		session_destroy();
-		print("<p align=right>You have logged out. <a href=index.php>Return</a></p>");
-		exit;
+		//print("<p align=right>You have logged out. <a href=index.php>Return</a></p>");
+		print("<div class=\"alert alert-success\" role=\"alert\" style=\"position: fixed;\" top=\"-200px\">You have logged out. <a href=index.php>Return</a></div>");
+    exit;
 	}
 
   $userscreenname = $content->screen_name;
@@ -86,10 +86,8 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 
 		<!-- Header -->
 		<div class="container">
-			<p align="center">
-				<!-- <img src="TwitHackTemp.png" width=50% height=50%> -->
-        <h1>AskTwitter</h1>
-			</p>
+			<h1>AskTwitter</h1>
+      <h5>What's something that Google can't answer?</h5>
 		</div>
   
 <?php
@@ -103,17 +101,20 @@ if(isset($_GET['submitquestion'])) {
 
 // Display success message if a question/answer is posted.
 if(isset($_GET['success'])) {
-	echo "<p>Your submission was successful!</p>";
+  ?>
+  <div class="container">
+    <div class="alert alert-success" role="alert">
+      Your submission was successful!
+    </div>
+  </div>
+  <?php
 }
-?>
-      
-<?php
+
 if(!isset($_GET['qid']) && $logged_in) {
 ?>
 	<!-- Post a question -->
 	<div class="container">
-    <p><h2>Got a question?</h2></p>
-	  
+    <p><h2>Got a question?</h2></p>	  
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
       <input type="text" name="tweet" style="width:80%">
@@ -132,7 +133,6 @@ if(!isset($_GET['qid']) && $logged_in) {
 <?php
 }
 ?>
-	
 		<!-- Buttons for categories -->
 		<nav class="navbar">
 			<div class="container">
@@ -140,11 +140,11 @@ if(!isset($_GET['qid']) && $logged_in) {
 					<a type="button" class="btn btn-default">Popular</a>
 					<a href="?q=%3F" type="button" class="btn btn-primary">New</a>
 					<a href="?q=%23qkqn" class="btn btn-success">Random</a>
-			</h1>
+			 </h1>
 		<!-- Search functionality -->
 			<form>
-			<input type="text" name="q" style="width:30%">
-			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
+  			<input type="text" name="q" style="width:80%">
+  			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
 			</form>
 			</div>
 		</nav>
@@ -154,14 +154,14 @@ if(!isset($_GET['qid']) && $logged_in) {
 		<!-- Main body -->
 
 
-<?php
+<!-- <?php
 // Hashtable to store English dictionary
 //$myFile = fopen("words.txt", "r") or die("Unable to open file!");
 //while(!feof($myFile)){
 //  print(fgets($myFile));
 //}
 //fclose($myFile);
-?>
+?>-->
 
 
 
@@ -172,6 +172,19 @@ if (isset($_GET['qid'])) {
   $questionid = $_GET['qid'];
   $screename = $_GET['sname'];
   
+
+
+
+
+
+
+  // Handle a submitted answer to a question.
+  if(isset($_GET['submit'])) {
+    $statues = $connection->post("statuses/update", array("status" => "@" . $screename  . " " . $_GET['tweet'], "in_reply_to_status_id" => $questionid));
+    header("Location: http://localhost/index.php?qid=" . $questionid . "&sname=" . $screename . "&success");
+    exit;
+  }
+
   print("<div class=\"container\">");
   print("<p>Viewing replies to question " . $questionid . "</p>");
 
@@ -191,13 +204,13 @@ if (isset($_GET['qid'])) {
     }
   }
   // Display message if there are no replies
-  if($replycount == 0) {
-    print("There are no replies to this question yet. Post one below!");
-  }
-    print("<form><input type=\"text\" name=\"tweet\" style=\"width:80%\"><input type=\"hidden\" name=\"sname\" value=\"" . $screename . "\"><input type=\"hidden\"  name=\"qid\" value=\"" . $questionid . "\"><br />");
+  //if($replycount == 0) {
+    //print("There are no replies to this question yet. Post one below!");
+  //}
+    //print("<form><input type=\"text\" name=\"tweet\" style=\"width:80%\"><input type=\"hidden\" name=\"sname\" value=\"" . $screename . "\"><input type=\"hidden\"  name=\"qid\" value=\"" . $questionid . "\"><br />");
     //print("<input type=\"submit\" name=\"submit\"></input></form><hr />");
-    print("<button type=\"button\" class=\"btn btn-default btn-info\" style=\"margin: 5px 1px\">Submit</button>");
-    print("</form></div>");
+    //print("<button type=\"button\" class=\"btn btn-default btn-info\" style=\"margin: 5px 1px\">Submit</button>");
+    //print("</form></div>");
 
 
 
@@ -208,32 +221,34 @@ if (isset($_GET['qid'])) {
 
 
 
-
-// Handle a user posting a question.
-if(isset($_GET['submitquestion'])) {
+// Handle a user posting a response.
+if(isset($_GET['submit'])) {
+  print("it is set?");
   // Post the tweet and redirect indicating success.
   $statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
   header("Location: " . $base_url . "?success");
   exit;
-} 
-
-// Display success message if a question/answer is posted.
-if(isset($_GET['success'])) {
-  echo "<p>Your answer submission was successful!</p>";
 }
 
-if(!isset($_GET['qid']) && $logged_in) {
+
+if(isset($_GET['qid']) && $logged_in) {
 ?>
-  <!-- Post a question -->
+  <!-- Post a response -->
   <div class="container">
-    <p><h2>Got a question?</h2></p>
-    
-      <!-- TODO: Use jQuery for placeholder text -->
-      <form>
-      <input type="text" name="tweet" style="width:80%">
-      <input type="submit" name="submitquestion" class="btn btn-sm btn-info" value="Post!"></input>
+    <?php
+    // Display message if there are no replies
+    //if($replycount == 0) {
+      //print("There are no replies to this question yet. Post one below!");
+    //}
+    ?>
+    <form><input type="text" name="tweet" style="width:80%">
+    <input type="submit" name="submit" class="btn btn-sm btn-info" value="Submit"></input>
+    <input type="hidden" name="sname" value="<?php echo($screename); ?>"></input>
+    <input type="hidden" name="qid" value="<?php echo($questionid); ?>"></input>
     </form>
-    </div>
+  </div>
+<?php
+}
 
 
 
@@ -243,14 +258,24 @@ if(!isset($_GET['qid']) && $logged_in) {
 
 
 
-  
+
+
+
+
+
+
+
+
+
+
   
 } else {
   // Get query if there is one?
   if(isset($_GET['q'])) {
     $query = $_GET['q'];
   } else {
-    $query = '#cat'; // Placeholder query
+    // Default search query
+    $query = '?';
   }
 
   print("<div class=\"container\"><table class=\"table table-striped\" style=\"width:100%\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
