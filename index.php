@@ -66,7 +66,8 @@ $base_url = "http://localhost/";
 		<!-- Header -->
 		<div class="container">
 			<p align="center">
-				<img src="TwitHackTemp.png" width=50% height=50%>
+				<!-- <img src="TwitHackTemp.png" width=50% height=50%> -->
+        <h1>AskTwitter</h1>
 			</p>
 		</div>
 
@@ -195,13 +196,9 @@ if (isset($_GET['qid'])) {
     $words = explode(" ", $tweet->text);
     $totalWords = sizeof($words);
 
+    // Populate Tags column
     print("<td><h4>");
-
     for($j = 0; $j < $totalWords; $j++){
-      // Check for hashtags
-      //if (startsWith($words[$j], '#'){
-        //print($words[$j]);
-      //}
 
       // Remove all special characters
       //$stripped = preg_replace('/[^a-z]/i', '', $words[$j]);
@@ -214,6 +211,7 @@ if (isset($_GET['qid'])) {
     }
     print("</h4></td>");
   }
+  // Close the table up
   print("</tr></tbody></table>");
 }
 
