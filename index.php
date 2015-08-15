@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 	<head>
@@ -15,38 +14,61 @@
 	<body>
 
 		<!-- Navigation bar -->
-		<nav class="navbar navbar-default">
-        <div class="container">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">TwitHack</a>
-          </div>
-          <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li class="active"><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  <li><a href="#">Action</a></li>
-                  <li><a href="#">Another action</a></li>
-                  <li><a href="#">Something else here</a></li>
-                  <li role="separator" class="divider"></li>
-                  <li class="dropdown-header">Nav header</li>
-                  <li><a href="#">Separated link</a></li>
-                  <li><a href="#">One more separated link</a></li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+      <ul class="nav nav-tabs" role="tablist" style="margin: 10px 10px">
+        <li role="presentation" class="active"><a href="#">Home</a></li>
+        <li role="presentation"><a href="#">Profile</a></li>
+        <li role="presentation"><a href="#">Messages</a></li>
+
+
+<?php
+require "twitteroauth/autoload.php";
+
+use Abraham\TwitterOAuth\TwitterOAuth;
+
+session_start();
+
+// App-specific access tokens
+$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
+$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
+
+// Use user access tokens to authentication for posting questions or replying
+if(isset($_SESSION['access_token']) && isset($_SESSION['access_token_secret'])) {
+  $access_token = $_SESSION['access_token'];
+  $access_token_secret = $_SESSION['access_token_secret'];
+} else {
+  $access_token = '';
+  $access_token_secret = '';
+}
+
+// Instantiate authentication framework for twitter API
+$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
+$content = $connection->get("account/verify_credentials");
+
+// User login
+if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])) {
+  if(isset($_GET['oauth_verifier'])) {
+    $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_GET['oauth_verifier'], "oauth_token" => $_GET['oauth_token']));
+    $_SESSION['access_token'] = $access_token['oauth_token'];
+    $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
+    print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href='twitter.php'>Click here to continue.</a>");
+    header("Location: http://localhost/twitter.php");
+    exit;
+  } else {
+    $access_token = $connection->oauth("oauth/request_token", array("oauth_callback" => "http://localhost/twitter.php"));
+
+    $url = $connection->url("oauth/authenticate", array("oauth_token" => $access_token['oauth_token']));
+    print("<div class=\"container\">");
+    print("<p align=right>You are not logged in. <a href=\"" . $url . "\">Log in with Twitter!</a></p>");
+    print("</div><br />");
+  }
+} else {
+  $userscreenname = $content->screen_name;
+  //print_r($content); // DEBUG
+  print("<p>You are logged in as @" . $userscreenname . "</p>");
+}
+?>
+      </ul>
+
 
 		<!-- Header -->
 		<div class="container">
@@ -100,27 +122,10 @@
 ?>
 
 
+
+
 <?php
-require "twitteroauth/autoload.php";
-
-use Abraham\TwitterOAuth\TwitterOAuth;
-
-$consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
-$consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
-$access_token = "3315621726-89FeofhsUwmUoArQmMcCi6PnEUVxe1FzNErYcqv";
-$access_token_secret = "aXqK7VxF2YRKyVNPMF4ZPvgrHiZ970hpc5ZnzzV2PQ3i2";
-
-$connection = new TwitterOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
-
-$content = $connection->get("account/verify_credentials");
-//$statues = $connection->get("statuses/home_timeline", array("count" => 25, "exclude_replies" => true));
-//$statues = $connection->post("statuses/update", array("status" => "hello world"));
-
-//print_r($statuses->statuses[0]->text);
-
 // Get http request data to determine if we're viewing questions or replies
-
-
 
 if (isset($_GET['qid'])) {  
   $questionid = $_GET['qid'];
