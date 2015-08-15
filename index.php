@@ -8,6 +8,8 @@ $consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
 
 session_start();
 
+$logged_in = false;
+
 // Use user access tokens to authentication for posting questions or replying
 if(isset($_SESSION['access_token']) && isset($_SESSION['access_token_secret'])) {
 	$access_token = $_SESSION['access_token'];
@@ -42,7 +44,7 @@ $base_url = "http://localhost/";
 	<body>
 		<!-- Navigation bar -->
       <ul class="nav nav-tabs" role="tablist" style="margin: 10px 10px">
-        <li role="presentation" class="active"><a href="#">Home</a></li>
+        <li role="presentation" class="active"><a href=index.php>Home</a></li>
         <li role="presentation"><a href="#">Profile</a></li>
         <li role="presentation"><a href="#">Messages</a></li>
 
@@ -67,9 +69,16 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     print("<p align=right>You are not logged in. <a href=\"" . $url . "\">Log in with Twitter!</a></p>");
   }
 } else {
+	// Handle log outs
+	if(isset($_GET['logout'])) {
+		session_destroy();
+		print("<p align=right>You have logged out. <a href=index.php>Return</a></p>");
+		exit;
+	}
+
   $userscreenname = $content->screen_name;
   //print_r($content); // DEBUG
-  print("<p>You are logged in as @" . $userscreenname . "</p>");
+  print("<p align=right>You are logged in as @" . $userscreenname . " <a href=\"?logout\">Log out.</a></p>");
   $logged_in = true;
 }
 ?>
@@ -128,10 +137,9 @@ if(!isset($_GET['qid']) && $logged_in) {
 		<nav class="navbar">
 			<div class="container">
 				<h1>
-					<button type="button" class="btn btn-default">Popular</button>
-					<button type="button" class="btn btn-primary">New</button>
-					<button type="button" class="btn btn-success">Random</button>
-					<button type="button" class="btn btn-info">Default</button>
+					<a type="button" class="btn btn-default">Popular</a>
+					<a href="?q=%3F" type="button" class="btn btn-primary">New</a>
+					<a href="?q=%23qkqn" class="btn btn-success">Random</a>
 			</h1>
 		<!-- Search functionality -->
 			<form>
@@ -184,11 +192,57 @@ if (isset($_GET['qid'])) {
   }
   // Display message if there are no replies
   if($replycount == 0) {
+    print("There are no replies to this question yet. Post one below!");
   }
     print("<form><input type=\"text\" name=\"tweet\" style=\"width:80%\"><input type=\"hidden\" name=\"sname\" value=\"" . $screename . "\"><input type=\"hidden\"  name=\"qid\" value=\"" . $questionid . "\"><br />");
     //print("<input type=\"submit\" name=\"submit\"></input></form><hr />");
     print("<button type=\"button\" class=\"btn btn-default btn-info\" style=\"margin: 5px 1px\">Submit</button>");
     print("</form></div>");
+
+
+
+
+
+
+
+
+
+
+
+// Handle a user posting a question.
+if(isset($_GET['submitquestion'])) {
+  // Post the tweet and redirect indicating success.
+  $statues = $connection->post("statuses/update", array("status" => $_GET['tweet']));
+  header("Location: " . $base_url . "?success");
+  exit;
+} 
+
+// Display success message if a question/answer is posted.
+if(isset($_GET['success'])) {
+  echo "<p>Your answer submission was successful!</p>";
+}
+
+if(!isset($_GET['qid']) && $logged_in) {
+?>
+  <!-- Post a question -->
+  <div class="container">
+    <p><h2>Got a question?</h2></p>
+    
+      <!-- TODO: Use jQuery for placeholder text -->
+      <form>
+      <input type="text" name="tweet" style="width:80%">
+      <input type="submit" name="submitquestion" class="btn btn-sm btn-info" value="Post!"></input>
+    </form>
+    </div>
+
+
+
+
+
+
+
+
+
   
   
 } else {
@@ -199,19 +253,19 @@ if (isset($_GET['qid'])) {
     $query = '#cat'; // Placeholder query
   }
 
-  print("<div class=\"container\"><table class=\"table table-striped\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
+  print("<div class=\"container\"><table class=\"table table-striped\" style=\"width:100%\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
 
   // Get top questions matching query
   $questions = $connection->get("search/tweets", array("q" => $query, "count"=>15));
   $count = 1;
   foreach($questions->statuses as $tweet) {
-    print("<tr><td>" . $count . "</td><td><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
+    print("<tr><td style=\"width:5%\">" . $count . "</td><td style=\"width:50%\"><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
     $count++;
     
-    print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
-    print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
-    print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
-    print("<td>@" . $tweet->user->screen_name . "</td>");
+    //print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
+    //print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
+    //print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
+    print("<td style=\"width:10%\">@" . $tweet->user->screen_name . "</td>");
 
     // Check if the tweet is English (enough)!
 
@@ -220,16 +274,27 @@ if (isset($_GET['qid'])) {
     $totalWords = sizeof($words);
 
     // Populate Tags column
-    print("<td><h4>");
+    print("<td style=\"word-wrap: break-word; width:30%\"><h4>");
+	$tagcount = 0;
     for($j = 0; $j < $totalWords; $j++){
-
+	
       // Remove all special characters
       //$stripped = preg_replace('/[^a-z]/i', '', $words[$j]);
       //print($stripped . "<br />");
 
       // Check if the words are hashtags
       if (substr($words[$j], 0, 1) == "#"){
-        print("<a href=\"?q=%23" . substr($words[$j], 1) . "\" class=\"label label-default\">" . $words[$j] . "</a>");
+		$tagcount++;
+		
+		// Limit the number of hash tags
+		if($tagcount > 3) {
+			break;
+		}
+
+          //<a href="?q=%23life" class="label label-default">#life</a>
+        //print("<a href=\"?q=%23" . $words[$j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
+        print("<a href=\"?q=%23" . substr($words[$j], 1) . "\" class=\"label label-default\">" . $words[$j] . "</a>&nbsp;");
+        //print($words[$j] . " ");
       }
     }
     print("</h4></td>");
