@@ -46,7 +46,8 @@
 		<!-- Header -->
 		<div class="container">
 			<p align="center">
-				<img src="TwitHackTemp.png" width=50% height=50%>
+				<!-- <img src="TwitHackTemp.png" width=50% height=50%> -->
+        <h1>AskTwitter</h1>
 			</p>
 		</div>
 
