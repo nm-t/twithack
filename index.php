@@ -206,7 +206,10 @@ if (isset($_GET['qid'])) {
       //print($stripped . "<br />");
 
       if (substr($words[$j], 0, 1) == "#"){
-        print("<span class=\"label label-default\">" . $words[$j] . "</span>");
+
+          //<a href="?q=%23life" class="label label-default">#life</a>
+        //print("<a href=\"?q=%23" . $words[$j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
+        print("<a href=\"?q=%23" . $words[j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
         //print($words[$j] . " ");
       }
     }
