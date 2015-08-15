@@ -148,7 +148,7 @@ if (isset($_GET['qid'])) {
   if(isset($_GET['q'])) {
     $query = $_GET['q'];
   } else {
-    $query = '?'; // Placeholder query
+    $query = '#cat'; // Placeholder query
   }
 
   print("<div class=\"container\"><table class=\"table table-striped\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
@@ -159,25 +159,36 @@ if (isset($_GET['qid'])) {
   foreach($questions->statuses as $tweet) {
     print("<tr><td>" . $count . "</td><td><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
     $count++;
+    
+    print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
+    print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
+    print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
+    print("<td>@" . $tweet->user->screen_name . "</td>");
 
     // Check if the tweet is English (enough)!
 
     // Delimit tweets by space character.
     $words = explode(" ", $tweet->text);
     $totalWords = sizeof($words);
-    //for($j = 0; $j < $totalWords; $j++){
+
+    print("<td><h4>");
+
+    for($j = 0; $j < $totalWords; $j++){
+      // Check for hashtags
+      //if (startsWith($words[$j], '#'){
+        //print($words[$j]);
+      //}
+
       // Remove all special characters
       //$stripped = preg_replace('/[^a-z]/i', '', $words[$j]);
       //print($stripped . "<br />");
-      // If the length of the word is >1
-      // And the 
-    //}
-    
-    print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
-    print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
-    print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
-    print("<td>" . $tweet->user->screen_name . "</td>");
-    print("<td><h4><span class=\"label label-default\">#sky</span></h4></td>");
+
+      if (substr($words[$j], 0, 1) == "#"){
+        print("<span class=\"label label-default\">" . $words[$j] . "</span>");
+        //print($words[$j] . " ");
+      }
+    }
+    print("</h4></td>");
   }
   print("</tr></tbody></table>");
 }
