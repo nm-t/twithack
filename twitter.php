@@ -16,13 +16,53 @@ $content = $connection->get("account/verify_credentials");
 
 //print_r($statuses->statuses[0]->text);
 
-// Get top 100 tweets matching query "where"
-$statuses = $connection->get("search/tweets", array("q" => "#why", "count"=>500));
+// Get http request data to determine if we're viewing questions or replies
 
-foreach($statuses->statuses as $tweet) {
-	//if(substr($tweet->text, -1) == '?')
-	//print($tweet->text . "<br /><br />");
-	print_r($tweet);
-	print("<br /><br />");
+if (isset($_GET['qid'])) {	
+	$questionid = $_GET['qid'];
+	$screename = $_GET['sname'];
+	
+	print("<p>Viewing replies to question " . $questionid . "</p>");
+	
+	// Get the original question
+	$question = $connection->get("statuses/show", array("id" => $questionid));
+	
+	print("<b>" . $question->user->screen_name . "</b>:");
+	print("<p><i>" . $question->text . "</i></p><hr />");	
+	
+	// Get and display replies to a particular question
+	$replycount = 0;
+	$replies = $connection->get("search/tweets", array("q" => "@" . $screename, "count"=>5));
+	foreach($replies->statuses as $reply) {	
+		if($reply->in_reply_to_status_id == $questionid) {
+			$replycount++;
+			print("<p>" . $reply->user->screen_name . ": " . $reply->text . "</p><hr >");
+		}
+	}
+	
+	// Display message if there are no replies
+	if($replycount == 0) {
+		print("<p>No replies yet. Write one!</p>");
+	}
+	
+} else {
+	// Get query if there is one?
+	if(isset($_GET['q'])) {
+		$query = $_GET['q'];
+	} else {
+		$query = '?'; // Placeholder query
+	}
+
+	// Get top questions matching query
+	$questions = $connection->get("search/tweets", array("q" => $query, "count"=>10));
+	foreach($questions->statuses as $tweet) {
+		print($tweet->user->screen_name . " sez (ID: " .  $tweet->id. "):<br />");
+		print("<p><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a></p>");
+		//print_r($tweet);
+
+		print("<br /><hr />");
+	}
+
 }
+
 ?>
