@@ -205,12 +205,9 @@ if (isset($_GET['qid'])) {
       //$stripped = preg_replace('/[^a-z]/i', '', $words[$j]);
       //print($stripped . "<br />");
 
+      // Check if the words are hashtags
       if (substr($words[$j], 0, 1) == "#"){
-
-          //<a href="?q=%23life" class="label label-default">#life</a>
-        //print("<a href=\"?q=%23" . $words[$j] . "\" class=\"label label-default\">" . $words[$j] . "</a>");
         print("<a href=\"?q=%23" . substr($words[$j], 1) . "\" class=\"label label-default\">" . $words[$j] . "</a>");
-        //print($words[$j] . " ");
       }
     }
     print("</h4></td>");
