@@ -6,6 +6,21 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 $consumer_key = "2nsbBRuAOZDLRzWpmNe0zes18";
 $consumer_secret = "DXAPr55PXruIRQMSSMvS2Y4CE3yFCfd6t3ijp7JCCb8TOJvpub";
 
+// Database settings
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "twithack";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+} 
+//echo "Connected successfully";
+
 session_start();
 
 $logged_in = false;
@@ -56,6 +71,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
     $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_GET['oauth_verifier'], "oauth_token" => $_GET['oauth_token']));
     $_SESSION['access_token'] = $access_token['oauth_token'];
     $_SESSION['access_token_secret'] = $access_token['oauth_token_secret'];
+	$_SESSION['screen_name']  = $access_token['screen_name'];
     print("Successfully logged in as @" . $access_token['screen_name'] . ". <a href=" . $base_url . ">Click here to continue.</a>");
     header("Location: http://localhost/");
     exit;
@@ -73,7 +89,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 		exit;
 	}
 
-  $userscreenname = $content->screen_name;
+  $userscreenname = $_SESSION['screen_name'];
   //print_r($content); // DEBUG
   print("<p>You are logged in as @" . $userscreenname . " <a href=\"?logout\">Log out.</a></p>");
   $logged_in = true;
@@ -201,15 +217,48 @@ if (isset($_GET['qid'])) {
   } else {
     $query = '#cat'; // Placeholder query
   }
+  
+  // Handle upvoting of a question
+  if(isset($_GET["upvote"]) && isset($_GET["voteid"])) {
+	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
+	if($result->num_rows != 1) {
+		// Update the count
+		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", 1, 0)");
+	} else {
+		// Increment the count on the vote
+		$conn->query("UPDATE votes SET count=count+1 WHERE postid=" . $_GET["voteid"]);
+	}
+  }
+  
+  // Handle downvoting of a question
+  if(isset($_GET["downvote"]) && isset($_GET["voteid"])) {
+	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
+	if($result->num_rows != 1) {
+		// Update the count
+		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", -1, 0)");
+	} else {
+		// Increment the count on the vote
+		$conn->query("UPDATE votes SET count=count-1 WHERE postid=" . $_GET["voteid"]);
+	}
+  }
 
   print("<div class=\"container\"><table class=\"table table-striped\" style=\"width:100%\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
 
   // Get top questions matching query
   $questions = $connection->get("search/tweets", array("q" => $query, "count"=>15));
-  $count = 1;
+  //$count = 1;
   foreach($questions->statuses as $tweet) {
-    print("<tr><td style=\"width:5%\">" . $count . "</td><td style=\"width:50%\"><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
-    $count++;
+	// Get the score for each tweet
+	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $tweet->id);
+	if($result->num_rows != 1) {
+		$count  = 0;
+	} else {
+		$row = $result->fetch_assoc();
+		$count = $row["count"];
+	}
+  
+    print("<tr><td style=\"width:5%\">" . $count . " <a href=\"?upvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">+</a> <a href=\"?downvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">-</a></td><td style=\"width:50%\"><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
+    //$count++;
     
     //print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
     //print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
