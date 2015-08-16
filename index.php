@@ -101,7 +101,7 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 		<div class="container">
 			<br />
 			<br />
-			<img src="AskTwitter.png">
+			<img src="AskTwitter.png" style="width:180px">
       <h5>What's something that Google can't answer?</h5>
 		</div>
   
@@ -275,8 +275,9 @@ if(isset($_GET['qid']) && $logged_in) {
       //print("There are no replies to this question yet. Post one below!");
     //}
     ?>
-    <form><input type="text" name="tweet" style="width:80%">
-    <input type="submit" name="submit" class="btn btn-sm btn-info" value="Submit"></input>
+	What do you think?<br />
+    <form><input type="text" name="tweet" style="width:50%; height:100px">
+    <br /><br /><input type="submit" name="submit" class="btn btn-sm btn-info" value="Submit"></input>
     <input type="hidden" name="sname" value="<?php echo($screename); ?>"></input>
     <input type="hidden" name="qid" value="<?php echo($questionid); ?>"></input>
     </form>
