@@ -1,4 +1,5 @@
 # AskTwitter
+##David Stojanovski and Nathalia Tan for UNIHACK 2015.
 
 Our project, <b>AskTwitter</b>, aims to provide a crowd-sourcing community that allows Twitter users to post questions and answer them, too: much like Stack Overflow or Reddit. We're using Twitter to reduce hassle for our users who already have a Twitter account; to tap into a huge goldmine of existing questions; and to get rid of any overhead with creating our own user signup service. <br />
 Using PHP, HTML, CSS (Bootstrap), and MySQL, we made a web interface that is minimalistic and easy to use. Users are able to browse questions that have been posted to Twitter, and users with Twitter accounts can log in via Twitter to post their own questions and respond to questions. <br />
