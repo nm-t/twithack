@@ -60,10 +60,8 @@ $base_url = "http://localhost/";
 	<body>
 		<!-- Navigation bar -->
       <ul class="nav nav-tabs" role="tablist" style="margin: 10px 10px">
-        <li role="presentation" class="active"><a href=index.php>Home</a></li>
-        <li role="presentation"><a href="#">Profile</a></li>
-        <li role="presentation"><a href="#">Messages</a></li>
-
+        <li role="presentation" <?php if(!isset($_GET["yourquestions"])) echo "class=\"active\"" ?>><a href=index.php>Home</a></li>
+        <li role="presentation" <?php if(isset($_GET["yourquestions"])) echo "class=\"active\"" ?>><a href="?yourquestions">Your questions</a></li>
 <?php
 // User login
 if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])) {
@@ -101,7 +99,9 @@ if(!isset($_SESSION['access_token']) || !isset($_SESSION['access_token_secret'])
 
 		<!-- Header -->
 		<div class="container">
-			<h1>AskTwitter</h1>
+			<br />
+			<br />
+			<img src="AskTwitter.png">
       <h5>What's something that Google can't answer?</h5>
 		</div>
   
@@ -132,8 +132,8 @@ if(!isset($_GET['qid']) && $logged_in) {
     <p><h2>Got a question?</h2></p>	  
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
-      <input type="text" name="tweet" style="width:80%">
-      <input type="submit" name="submitquestion" class="btn btn-sm btn-info" value="Post!"></input>
+      <input type="text" name="tweet" style="width:80%; height:55x; font-size:24px">
+      <input type="submit" name="submitquestion" class="btn btn-lg btn-info" value="Post!"></input>
 	  </form>
       <p>Suggested hashtags:<br>
         <!-- TODO: Insert dynamic hashtag adding -->
@@ -160,7 +160,7 @@ if(!isset($_GET['qid'])) {
 			 </h1>
 		<!-- Search functionality -->
 			<form>
-  			<input type="text" name="q" style="width:80%">
+  			<input type="text" name="q" style="width:40%">
   			<input type="submit" name="submit" class="btn btn-sm btn-info" value="Search"></input>
 			</form>
 			</div>
@@ -168,32 +168,39 @@ if(!isset($_GET['qid'])) {
 		
 <?php } ?>		
 
-		<!-- Main body -->
-
-
-<!-- <?php
-// Hashtable to store English dictionary
-//$myFile = fopen("words.txt", "r") or die("Unable to open file!");
-//while(!feof($myFile)){
-//  print(fgets($myFile));
-//}
-//fclose($myFile);
-?>-->
-
-
+<!-- Main body -->
 
 <?php
-// Get http request data to determine if we're viewing questions or replies
 
+// Handle up and down votes
+
+ if(isset($_GET["upvote"]) && isset($_GET["voteid"])) {
+	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
+	if($result->num_rows != 1) {
+		// Update the count
+		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", 1, 0)");
+	} else {
+		// Increment the count on the vote
+		$conn->query("UPDATE votes SET count=count+1 WHERE postid=" . $_GET["voteid"]);
+	}
+ }
+  
+ // Handle downvoting of a question
+ if(isset($_GET["downvote"]) && isset($_GET["voteid"])) {
+	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
+	if($result->num_rows != 1) {
+		// Update the count
+		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", -1, 0)");
+	} else {
+		// Increment the count on the vote
+		$conn->query("UPDATE votes SET count=count-1 WHERE postid=" . $_GET["voteid"]);
+	}
+ }
+
+// Get http request data to determine if we're viewing questions or replies
 if (isset($_GET['qid'])) {  
   $questionid = $_GET['qid'];
   $screename = $_GET['sname'];
-  
-
-
-
-
-
 
   // Handle a submitted answer to a question.
   if(isset($_GET['submit'])) {
@@ -203,22 +210,39 @@ if (isset($_GET['qid'])) {
   }
 
   print("<div class=\"container\">");
-  print("<p>Viewing replies to question " . $questionid . "</p>");
+  //print("<p>Viewing replies to question " . $questionid . "</p>");
 
   // Get the original question
   $question = $connection->get("statuses/show", array("id" => $questionid));
   
-  print("<b>" . $question->user->screen_name . "</b>:");
-  print("<p><i>" . $question->text . "</i></p><hr />"); 
-  
+  print("<hr><b>@" . $question->user->screen_name . "</b> asked:");
+  print("<p><i>" . $question->text . "</i></p>"); 
+  print("<a href=http://twitter.com/" . $question->user->screen_name . "/status/" . $question->id . ">Permalink</a><hr />");	
+    print("<h3>Answers</h3><br />");
+
   // Get and display replies to a particular question
   $replycount = 0;
-  $replies = $connection->get("search/tweets", array("q" => "@" . $screename, "count"=>3));
+  $replies = $connection->get("search/tweets", array("q" => "@" . $screename, "count"=>1000));
   foreach($replies->statuses as $reply) { 
     if($reply->in_reply_to_status_id == $questionid) {
-      $replycount++;
-      print("<p>" . $reply->user->screen_name . ": " . $reply->text . "</p><hr >");
+		$replycount++;
+		
+		// Get the score for each tweet
+		$result = $conn->query("SELECT * FROM votes WHERE postid=" . $reply->id);
+		if($result->num_rows != 1) {
+			$count  = 0;
+		} else {
+			$row = $result->fetch_assoc();
+			$count = $row["count"];
+		}
+		
+      print("<p><a href=https:twitter.com/". $reply->user->screen_name . ">@" . $reply->user->screen_name . "</a> (" . $count . " points) <a href=\"?upvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">+</a>/<a href=\"?downvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">-</a><br />" . $reply->text . "</p><hr />");
     }
+  }
+  
+  
+  if($replycount == 0) {
+	print("<p>No answers so far. Be the first to answer!</p>");
   }
   // Display message if there are no replies
   //if($replycount == 0) {
@@ -229,15 +253,6 @@ if (isset($_GET['qid'])) {
     //print("<button type=\"button\" class=\"btn btn-default btn-info\" style=\"margin: 5px 1px\">Submit</button>");
     //print("</form></div>");
 
-
-
-
-
-
-
-
-
-
 // Handle a user posting a response.
 if(isset($_GET['submit'])) {
   print("it is set?");
@@ -246,6 +261,8 @@ if(isset($_GET['submit'])) {
   header("Location: " . $base_url . "?success");
   exit;
 }
+
+
 
 
 if(isset($_GET['qid']) && $logged_in) {
@@ -267,25 +284,6 @@ if(isset($_GET['qid']) && $logged_in) {
 <?php
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 } else {
   // Get query if there is one?
   if(isset($_GET['q'])) {
@@ -295,36 +293,18 @@ if(isset($_GET['qid']) && $logged_in) {
     $query = '?';
   }
   
-  // Handle upvoting of a question
-  if(isset($_GET["upvote"]) && isset($_GET["voteid"])) {
-	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
-	if($result->num_rows != 1) {
-		// Update the count
-		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", 1, 0)");
-	} else {
-		// Increment the count on the vote
-		$conn->query("UPDATE votes SET count=count+1 WHERE postid=" . $_GET["voteid"]);
-	}
+  print("<div class=\"container\"><table class=\"table table-striped\" style=\"width:100%\"><thead><tr><th>Score</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
+
+  // Get top questions matching query or get user questions
+  if(isset($_GET['yourquestions'])) {
+	$questions = $connection->get("statuses/user_timeline", array("count"=>100));
+	//print_r($questions);
+  } else {
+	$questions = $connection->get("search/tweets", array("q" => $query, "count"=>100))->statuses;
   }
   
-  // Handle downvoting of a question
-  if(isset($_GET["downvote"]) && isset($_GET["voteid"])) {
-	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $_GET["voteid"]);
-	if($result->num_rows != 1) {
-		// Update the count
-		$conn->query("INSERT INTO votes (postid, count, userid) VALUES (" . $_GET["voteid"] . ", -1, 0)");
-	} else {
-		// Increment the count on the vote
-		$conn->query("UPDATE votes SET count=count-1 WHERE postid=" . $_GET["voteid"]);
-	}
-  }
-
-  print("<div class=\"container\"><table class=\"table table-striped\" style=\"width:100%\"><thead><tr><th>#</th><th>Question</th><th>Username</th><th>Tags</th></tr></thead><tbody>");
-
-  // Get top questions matching query
-  $questions = $connection->get("search/tweets", array("q" => $query, "count"=>15));
   //$count = 1;
-  foreach($questions->statuses as $tweet) {
+  foreach($questions as $tweet) {
 	// Get the score for each tweet
 	$result = $conn->query("SELECT * FROM votes WHERE postid=" . $tweet->id);
 	if($result->num_rows != 1) {
@@ -333,24 +313,43 @@ if(isset($_GET['qid']) && $logged_in) {
 		$row = $result->fetch_assoc();
 		$count = $row["count"];
 	}
+		
+  $isquestion = false;
+
+    // Delimit tweets by space character.
+    $words = explode(" ", $tweet->text);
+    $totalWords = sizeof($words);
+	//print_r($tweet);
+	
+	// SUPAR HACK to determine if it's a question
+	foreach($words as $word) {
+		// Skip hashtags
+		if(substr($word, 0, 1) == "#") {
+			continue;
+		}
+		
+		$isquestion = (substr($word, -1) == "?");
+	}
+	
+	// Skip non-questions
+	if(!$isquestion) {
+		continue;
+	}
   
-    print("<tr><td style=\"width:5%\">" . $count . " <a href=\"?upvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">+</a> <a href=\"?downvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">-</a></td><td style=\"width:50%\"><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a><br />");
+    print("<tr><td style=\"width:5%\">" . $count . " <a href=\"?upvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">+</a>/<a href=\"?downvote&voteid=" . $tweet->id . (isset($_GET['q']) ? ("&q=" . urlencode($_GET['q'])) : "") . "\">-</a></td><td style=\"width:50%\"><a href=\"?qid=" . $tweet->id . "&sname=" . $tweet->user->screen_name . "\">" . $tweet->text . "</a> (" . time2str($tweet->created_at) .")<br />");
     //$count++;
     
     //print("<form><input type=\"text\" name=\"answer_1\" size=\"50\" margin-bottom=\"5\"><br />");
     //print("<button type=\"button\" class=\"btn btn-xs btn-info\" style=\"margin: 5px 1px\">Reply</button>");
     //print("<button type=\"button\" class=\"btn btn-xs btn-default\" style=\"margin: 5px 1px\">Clear</button></td>");
-    print("<td style=\"width:10%\">@" . $tweet->user->screen_name . "</td>");
+    print("<td style=\"width:10%\"><a href=\"http://twitter.com/" . $tweet->user->screen_name . "\">@" . $tweet->user->screen_name . "</a></td>");
 
-    // Check if the tweet is English (enough)!
-
-    // Delimit tweets by space character.
-    $words = explode(" ", $tweet->text);
-    $totalWords = sizeof($words);
+    
 
     // Populate Tags column
     print("<td style=\"word-wrap: break-word; width:30%\"><h4>");
 	$tagcount = 0;
+	
     for($j = 0; $j < $totalWords; $j++){
 	
       // Remove all special characters
@@ -376,6 +375,45 @@ if(isset($_GET['qid']) && $logged_in) {
   }
   // Close the table up
   print("</tr></tbody></table>");
+}
+
+function time2str($ts) {
+    if(!ctype_digit($ts)) {
+        $ts = strtotime($ts);
+    }
+    $diff = time() - $ts;
+    if($diff == 0) {
+        return 'now';
+    } elseif($diff > 0) {
+        $day_diff = floor($diff / 86400);
+        if($day_diff == 0) {
+            if($diff < 60) return 'just now';
+            if($diff < 120) return '1 minute ago';
+            if($diff < 3600) return floor($diff / 60) . ' minutes ago';
+            if($diff < 7200) return '1 hour ago';
+            if($diff < 86400) return floor($diff / 3600) . ' hours ago';
+        }
+        if($day_diff == 1) { return 'Yesterday'; }
+        if($day_diff < 7) { return $day_diff . ' days ago'; }
+        if($day_diff < 31) { return ceil($day_diff / 7) . ' weeks ago'; }
+        if($day_diff < 60) { return 'last month'; }
+        return date('F Y', $ts);
+    } else {
+        $diff = abs($diff);
+        $day_diff = floor($diff / 86400);
+        if($day_diff == 0) {
+            if($diff < 120) { return 'in a minute'; }
+            if($diff < 3600) { return 'in ' . floor($diff / 60) . ' minutes'; }
+            if($diff < 7200) { return 'in an hour'; }
+            if($diff < 86400) { return 'in ' . floor($diff / 3600) . ' hours'; }
+        }
+        if($day_diff == 1) { return 'Tomorrow'; }
+        if($day_diff < 4) { return date('l', $ts); }
+        if($day_diff < 7 + (7 - date('w'))) { return 'next week'; }
+        if(ceil($day_diff / 7) < 4) { return 'in ' . ceil($day_diff / 7) . ' weeks'; }
+        if(date('n', $ts) == date('n') + 1) { return 'next month'; }
+        return date('F Y', $ts);
+    }
 }
 
 ?>
