@@ -128,15 +128,17 @@ if(isset($_GET['success'])) {
 if(!isset($_GET['qid']) && $logged_in) {
 ?>
 	<!-- Post a question -->
-	<div class="container">
+	<div class="container" style="position:absolute; top:135px; right:0px; padding-left:100px">
     <p><h2>Got a question?</h2></p>	  
       <!-- TODO: Use jQuery for placeholder text -->
       <form>
-      <input type="text" name="tweet" style="width:80%; height:55x; font-size:24px">
-      <input type="submit" name="submitquestion" class="btn btn-lg btn-info" value="Post!"></input>
+      <input type="text" name="tweet" style="width:60%; height:55px; font-size:24px">
+      <input type="submit" name="submitquestion" class="btn btn-default btn-info" style="position:relative; height:53px; bottom:3px" value="Post!"></input>
 	  </form>
-      <p>Suggested hashtags:<br>
-        <!-- TODO: Insert dynamic hashtag adding -->
+    </div>
+	
+	<!--<div class="container">
+      <p>` hashtags:<br>
         <h4>
           <a href="?q=%23cat" class="label label-default">#cat</a>
           <a href="?q=%23animals" class="label label-default">#animals</a>
@@ -144,7 +146,7 @@ if(!isset($_GET['qid']) && $logged_in) {
           <a href="?q=%23philosophy"  class="label label-default">#philosophy</a>
         </h4>
       </p>
-    </div>
+	</div>-->
 <?php
 }
 
@@ -154,9 +156,9 @@ if(!isset($_GET['qid'])) {
 		<nav class="navbar">
 			<div class="container">
 				<h1>
-					<a type="button" class="btn btn-default">Popular</a>
+					<a href="?popular" class="btn btn-primary">Popular</a>
 					<a href="?q=%3F" type="button" class="btn btn-primary">New</a>
-					<a href="?q=%23qkqn" class="btn btn-success">Random</a>
+					<a href="?q=%23qkqn" class="btn btn-primary">Random</a>
 			 </h1>
 		<!-- Search functionality -->
 			<form>
@@ -216,8 +218,8 @@ if (isset($_GET['qid'])) {
   $question = $connection->get("statuses/show", array("id" => $questionid));
   
   print("<hr><b>@" . $question->user->screen_name . "</b> asked:");
-  print("<p><i>" . $question->text . "</i></p>"); 
-  print("<a href=http://twitter.com/" . $question->user->screen_name . "/status/" . $question->id . ">Permalink</a><hr />");	
+  print("<p><i>" . $question->text . "</i></p>");
+  print(time2str($question->created_at) . " - <a href=http://twitter.com/" . $question->user->screen_name . "/status/" . $question->id . ">Permalink</a><hr />");	
     print("<h3>Answers</h3><br />");
 
   // Get and display replies to a particular question
@@ -236,7 +238,7 @@ if (isset($_GET['qid'])) {
 			$count = $row["count"];
 		}
 		
-      print("<p><a href=https:twitter.com/". $reply->user->screen_name . ">@" . $reply->user->screen_name . "</a> (" . $count . " points) <a href=\"?upvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">+</a>/<a href=\"?downvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">-</a><br />" . $reply->text . "</p><hr />");
+      print("<p><a href=https:twitter.com/". $reply->user->screen_name . ">@" . $reply->user->screen_name . "</a> (" . $count . " points, " . time2str($reply->created_at) .") <a href=\"?upvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">+</a>/<a href=\"?downvote&voteid=" . $reply->id ."&qid=" . $questionid . "&sname=" . $screename . "\">-</a><br />" . $reply->text . "</p><hr />");
     }
   }
   
@@ -288,7 +290,7 @@ if(isset($_GET['qid']) && $logged_in) {
 } else {
   // Get query if there is one?
   if(isset($_GET['q'])) {
-    $query = $_GET['q'];
+    $query = urlencode($_GET['q']);
   } else {
     // Default search query
     $query = '?';
@@ -298,10 +300,14 @@ if(isset($_GET['qid']) && $logged_in) {
 
   // Get top questions matching query or get user questions
   if(isset($_GET['yourquestions'])) {
-	$questions = $connection->get("statuses/user_timeline", array("count"=>100));
+	$questions = $connection->get("statuses/user_timeline", array("count"=>1000));
 	//print_r($questions);
   } else {
-	$questions = $connection->get("search/tweets", array("q" => $query, "count"=>100))->statuses;
+	if(isset($_GET['popular'])) {
+		$questions = $connection->get("search/tweets", array("q" => $query, "count"=>1000, "result_type"=>"popular"))->statuses;
+	} else {
+		$questions = $connection->get("search/tweets", array("q" => $query, "count"=>1000))->statuses;
+	}
   }
   
   //$count = 1;
